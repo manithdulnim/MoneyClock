@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tuition Earnings Tracker</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --text-color: #2c3e50;
+            --card-bg: #ffffff;
+            --input-border: #ecf0f1;
+            --accent-color: #27ae60;
+            --accent-hover: #2ecc71;
+            --danger: #e74c3c;
+            --danger-hover: #c0392b;
+            --warning: #f39c12;
+            --warning-hover: #d68910;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --input-border: #333333;
+            --accent-color: #4cd137;
+            --accent-hover: #44bd32;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+        }
+
+        h1 {
+            margin-bottom: 25px;
+            transition: color 0.3s;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: 2px solid var(--text-color);
+            color: var(--text-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--text-color);
+            color: var(--bg-color);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            opacity: 0.8;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--input-border);
+            border-radius: 8px;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: border-color 0.3s, background-color 0.3s, color 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--accent-color);
+            outline: none;
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: #fff;
+            border: none;
+            padding: 15px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            transition: background-color 0.3s, transform 0.1s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:active {
+            transform: scale(0.96);
+        }
+
+        .btn-pause {
+            background-color: var(--warning);
+        }
+
+        .btn-pause:hover {
+            background-color: var(--warning-hover);
+        }
+
+        .btn-stop {
+            background-color: var(--danger);
+        }
+
+        .btn-stop:hover {
+            background-color: var(--danger-hover);
+        }
+
+        .display-area {
+            display: none;
+        }
+
+        .money {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin: 20px 0;
+            font-family: monospace;
+            text-shadow: 0 0 10px rgba(76, 209, 55, 0.2);
+        }
+
+        .timer {
+            font-size: 28px;
+            font-family: monospace;
+            opacity: 0.9;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.02);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .is-running .money {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">Toggle Dark Mode</button>
+
+    <div class="container" id="main-card">
+        <div id="setup-area">
+            <h1>Session Tracker</h1>
+            <div class="input-group">
+                <label for="rate">Hourly Rate (LKR):</label>
+                <input type="number" id="rate" min="0" step="50" value="1500">
+            </div>
+            <button onclick="startClass()">Start Class</button>
+        </div>
+
+        <div id="display-area" class="display-area">
+            <div class="timer" id="time-display">00:00:00</div>
+            <div class="money" id="money-display">LKR 0.00</div>
+
+            <div class="controls">
+                <button id="pause-btn" class="btn-pause" onclick="togglePause()">Pause</button>
+                <button class="btn-stop" onclick="stopClass()">End Class</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let interval;
+        let totalSeconds = 0;
+        let isPaused = false;
+        let hourlyRate = 0;
+
+        function toggleTheme() {
+            const body = document.body;
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+            }
+        }
+
+        function startClass() {
+            hourlyRate = parseFloat(document.getElementById('rate').value) || 0;
+
+            if (hourlyRate <= 0) {
+                alert("Please enter a valid hourly rate.");
+                return;
+            }
+
+            document.getElementById('setup-area').style.display = 'none';
+            document.getElementById('display-area').style.display = 'block';
+            document.getElementById('main-card').classList.add('is-running');
+
+            totalSeconds = 0;
+            isPaused = false;
+            updateDisplay();
+
+            interval = setInterval(() => {
+                if (!isPaused) {
+                    totalSeconds++;
+                    updateDisplay();
+                }
+            }, 1000);
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            const pauseBtn = document.getElementById('pause-btn');
+            const card = document.getElementById('main-card');
+
+            if (isPaused) {
+                pauseBtn.innerText = "Resume";
+                pauseBtn.style.backgroundColor = "var(--accent-color)";
+                card.classList.remove('is-running');
+            } else {
+                pauseBtn.innerText = "Pause";
+                pauseBtn.style.backgroundColor = "var(--warning)";
+                card.classList.add('is-running');
+            }
+        }
+
+        function stopClass() {
+            clearInterval(interval);
+            document.getElementById('setup-area').style.display = 'block';
+            document.getElementById('display-area').style.display = 'none';
+            document.getElementById('main-card').classList.remove('is-running');
+
+            // Reset pause button state for next time
+            const pauseBtn = document.getElementById('pause-btn');
+            pauseBtn.innerText = "Pause";
+            pauseBtn.style.backgroundColor = "var(--warning)";
+        }
+
+        function updateDisplay() {
+            const h = Math.floor(totalSeconds / 3600);
+            const m = Math.floor((totalSeconds % 3600) / 60);
+            const s = totalSeconds % 60;
+
+            document.getElementById('time-display').innerText =
+                String(h).padStart(2, '0') + ":" +
+                String(m).padStart(2, '0') + ":" +
+                String(s).padStart(2, '0');
+
+            // Calculate earnings: (Rate / 3600 seconds) * total seconds elapsed
+            const earned = (hourlyRate / 3600) * totalSeconds;
+
+            // Using 2 decimal places for standard currency display
+            document.getElementById('money-display').innerText = "LKR " + earned.toFixed(2);
+        }
+    </script>
+</body>
+
+</html>
