@@ -296,6 +296,7 @@
             // Calculate earnings: (Rate / 3600 seconds) * total seconds elapsed
             const earned = (hourlyRate / 3600) * totalSeconds;
 
+            
             // Using 2 decimal places for standard currency display
             document.getElementById('money-display').innerText = "LKR " + earned.toFixed(2);
         }
