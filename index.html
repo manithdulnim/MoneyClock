@@ -1,29 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tuition Earnings Tracker</title>
+    <title>Tuition Earnings Dashboard</title>
     <style>
         :root {
-            --bg-color: #f4f7f6;
+            --bg-color: #f0f2f5;
             --text-color: #2c3e50;
             --card-bg: #ffffff;
-            --input-border: #ecf0f1;
+            --input-border: #dcdde1;
             --accent-color: #27ae60;
             --accent-hover: #2ecc71;
             --danger: #e74c3c;
             --danger-hover: #c0392b;
             --warning: #f39c12;
             --warning-hover: #d68910;
+            --secondary: #3498db;
         }
 
         [data-theme="dark"] {
             --bg-color: #121212;
             --text-color: #e0e0e0;
             --card-bg: #1e1e1e;
-            --input-border: #333333;
+            --input-border: #333;
             --accent-color: #4cd137;
             --accent-hover: #44bd32;
         }
@@ -32,38 +32,24 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             margin: 0;
+            padding: 20px;
             transition: background-color 0.3s, color 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .container {
-            background-color: var(--card-bg);
-            padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-            text-align: center;
+        .header {
             width: 100%;
-            max-width: 400px;
-            transition: background-color 0.3s, transform 0.2s;
-        }
-
-        .container:hover {
-            transform: translateY(-5px);
-        }
-
-        h1 {
-            margin-bottom: 25px;
-            transition: color 0.3s;
+            max-width: 900px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
         }
 
         .theme-toggle {
-            position: absolute;
-            top: 20px;
-            right: 20px;
             background: none;
             border: 2px solid var(--text-color);
             color: var(--text-color);
@@ -79,228 +65,352 @@
             color: var(--bg-color);
         }
 
-        .input-group {
-            margin-bottom: 20px;
-            text-align: left;
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
         }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            opacity: 0.8;
+        @media (max-width: 768px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
         }
 
+        .card {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: background-color 0.3s;
+        }
+
+        h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 2px solid var(--input-border); padding-bottom: 10px; }
+        
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; opacity: 0.8; }
+        
         input {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             border: 2px solid var(--input-border);
             border-radius: 8px;
             background-color: var(--card-bg);
             color: var(--text-color);
             box-sizing: border-box;
             font-size: 16px;
-            transition: border-color 0.3s, background-color 0.3s, color 0.3s;
+            transition: border-color 0.3s;
         }
-
-        input:focus {
-            border-color: var(--accent-color);
-            outline: none;
-        }
+        input:focus { border-color: var(--accent-color); outline: none; }
 
         button {
             background-color: var(--accent-color);
             color: #fff;
             border: none;
-            padding: 15px 20px;
-            font-size: 18px;
+            padding: 12px 15px;
+            font-size: 16px;
             font-weight: bold;
             border-radius: 8px;
             cursor: pointer;
             width: 100%;
-            margin-top: 10px;
-            transition: background-color 0.3s, transform 0.1s, box-shadow 0.2s;
+            transition: transform 0.1s, background-color 0.2s;
         }
+        button:hover { background-color: var(--accent-hover); }
+        button:active { transform: scale(0.98); }
 
-        button:hover {
-            background-color: var(--accent-hover);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
+        .btn-pause { background-color: var(--warning); }
+        .btn-stop { background-color: var(--danger); }
+        .btn-secondary { background-color: var(--secondary); margin-top: 10px;}
 
-        button:active {
-            transform: scale(0.96);
-        }
+        /* Timer Styles */
+        .timer-display { text-align: center; display: none; padding: 20px 0; }
+        .money { font-size: 40px; font-weight: bold; color: var(--accent-color); margin: 10px 0; font-family: monospace; }
+        .timer { font-size: 24px; font-family: monospace; opacity: 0.9; }
+        .controls { display: flex; gap: 10px; margin-top: 15px; }
 
-        .btn-pause {
-            background-color: var(--warning);
-        }
+        /* Total Earnings & Goal Styles */
+        .total-money { font-size: 48px; font-weight: bold; color: var(--accent-color); text-align: center; margin: 10px 0; }
+        .progress-container { width: 100%; background-color: var(--input-border); border-radius: 10px; height: 20px; overflow: hidden; margin-top: 15px; }
+        .progress-bar { height: 100%; background-color: var(--accent-color); width: 0%; transition: width 0.5s ease; }
+        .goal-text { text-align: center; font-size: 0.9rem; margin-top: 5px; opacity: 0.8; }
 
-        .btn-pause:hover {
-            background-color: var(--warning-hover);
-        }
+        /* History Styles */
+        .history-list { max-height: 250px; overflow-y: auto; padding: 0; margin: 0; list-style: none; }
+        .history-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--input-border); font-size: 0.9rem; }
+        .history-item:last-child { border-bottom: none; }
+        .history-date { opacity: 0.6; font-size: 0.8rem; }
+        .history-amount { font-weight: bold; color: var(--accent-color); }
 
-        .btn-stop {
-            background-color: var(--danger);
-        }
-
-        .btn-stop:hover {
-            background-color: var(--danger-hover);
-        }
-
-        .display-area {
-            display: none;
-        }
-
-        .money {
-            font-size: 48px;
-            font-weight: bold;
-            color: var(--accent-color);
-            margin: 20px 0;
-            font-family: monospace;
-            text-shadow: 0 0 10px rgba(76, 209, 55, 0.2);
-        }
-
-        .timer {
-            font-size: 28px;
-            font-family: monospace;
-            opacity: 0.9;
-        }
-
-        .controls {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.02);
-            }
-
-            100% {
-                transform: scale(1);
-            }
-        }
-
-        .is-running .money {
-            animation: pulse 2s infinite;
-        }
     </style>
 </head>
-
 <body>
-    <button class="theme-toggle" onclick="toggleTheme()">Toggle Dark Mode</button>
 
-    <div class="container" id="main-card">
-        <div id="setup-area">
-            <h1>Session Tracker</h1>
-            <div class="input-group">
-                <label for="rate">Hourly Rate (LKR):</label>
-                <input type="number" id="rate" min="0" step="50" value="1500">
+    <div class="header">
+        <h1>Tuition Tracker Pro</h1>
+        <button class="theme-toggle" onclick="toggleTheme()">Toggle Dark Mode</button>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card" id="session-card">
+            <h2>Active Class</h2>
+            <div id="setup-area">
+                <div class="input-group">
+                    <label>Session Name (Student/Subject):</label>
+                    <input type="text" id="session-name" placeholder="e.g. O/L Math - John">
+                </div>
+                <div class="input-group">
+                    <label>Hourly Rate (LKR):</label>
+                    <input type="number" id="rate" min="0" step="50" value="1500">
+                </div>
+                <button onclick="startClass()">Start Class</button>
             </div>
-            <button onclick="startClass()">Start Class</button>
+
+            <div id="display-area" class="timer-display">
+                <div id="current-session-label" style="font-weight:bold; margin-bottom:10px;"></div>
+                <div class="timer" id="time-display">00:00:00</div>
+                <div class="money" id="money-display">LKR 0.00</div>
+                <div class="controls">
+                    <button id="pause-btn" class="btn-pause" onclick="togglePause()">Pause</button>
+                    <button class="btn-stop" onclick="stopAndSaveClass()">End & Save</button>
+                </div>
+            </div>
         </div>
 
-        <div id="display-area" class="display-area">
-            <div class="timer" id="time-display">00:00:00</div>
-            <div class="money" id="money-display">LKR 0.00</div>
-
-            <div class="controls">
-                <button id="pause-btn" class="btn-pause" onclick="togglePause()">Pause</button>
-                <button class="btn-stop" onclick="stopClass()">End Class</button>
+        <div class="card">
+            <h2>Total Earnings</h2>
+            <div class="total-money" id="total-display">LKR 0.00</div>
+            
+            <div class="input-group" style="margin-top: 20px;">
+                <label>Set Target Goal (LKR):</label>
+                <input type="number" id="target-goal" value="50000" onchange="updateGoalProgress()">
             </div>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="goal-bar"></div>
+            </div>
+            <div class="goal-text" id="goal-text">0% of Goal</div>
+
+            <hr style="border: 1px solid var(--input-border); margin: 20px 0;">
+
+            <h3>Add Missed Earnings</h3>
+            <div class="input-group">
+                <input type="number" id="manual-amount" placeholder="Amount (LKR)">
+            </div>
+            <div class="input-group">
+                <input type="text" id="manual-desc" placeholder="Description (e.g. Offline Marking)">
+            </div>
+            <button class="btn-secondary" onclick="addManualEntry()">Add to Total</button>
+        </div>
+
+        <div class="card" style="grid-column: 1 / -1;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>Session History</h2>
+                <button class="btn-stop" style="width: auto; padding: 5px 10px; font-size: 0.8rem;" onclick="clearHistory()">Clear Data</button>
+            </div>
+            <ul class="history-list" id="history-list">
+                </ul>
         </div>
     </div>
 
     <script>
+        // --- State Variables ---
+        let totalEarnings = 0;
+        let sessionHistory = [];
+        
+        // Timer Variables
         let interval;
-        let totalSeconds = 0;
         let isPaused = false;
         let hourlyRate = 0;
+        let startTime = 0;
+        let accumulatedTime = 0;
+        let currentSessionName = "";
 
+        // --- Initialization ---
+        window.onload = function() {
+            // Load theme
+            if(localStorage.getItem('theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
+            
+            // Load Data
+            if(localStorage.getItem('totalEarnings')) totalEarnings = parseFloat(localStorage.getItem('totalEarnings'));
+            if(localStorage.getItem('sessionHistory')) sessionHistory = JSON.parse(localStorage.getItem('sessionHistory'));
+            if(localStorage.getItem('targetGoal')) document.getElementById('target-goal').value = localStorage.getItem('targetGoal');
+            
+            updateDashboard();
+        };
+
+        // --- Core Functions ---
         function toggleTheme() {
             const body = document.body;
             if (body.getAttribute('data-theme') === 'dark') {
                 body.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
             } else {
                 body.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
             }
         }
 
+        function updateDashboard() {
+            // Update Total
+            document.getElementById('total-display').innerText = "LKR " + totalEarnings.toFixed(2);
+            
+            // Update Goal
+            updateGoalProgress();
+
+            // Render History
+            const list = document.getElementById('history-list');
+            list.innerHTML = "";
+            if (sessionHistory.length === 0) {
+                list.innerHTML = "<li style='text-align:center; opacity:0.5;'>No sessions recorded yet.</li>";
+            } else {
+                // Show newest first
+                [...sessionHistory].reverse().forEach(item => {
+                    list.innerHTML += `
+                        <li class="history-item">
+                            <div>
+                                <strong>${item.name}</strong><br>
+                                <span class="history-date">${item.date} • ${item.duration}</span>
+                            </div>
+                            <div class="history-amount">+ LKR ${item.amount.toFixed(2)}</div>
+                        </li>
+                    `;
+                });
+            }
+        }
+
+        function updateGoalProgress() {
+            const goal = parseFloat(document.getElementById('target-goal').value) || 1;
+            localStorage.setItem('targetGoal', goal);
+            
+            let percentage = (totalEarnings / goal) * 100;
+            if (percentage > 100) percentage = 100;
+            
+            document.getElementById('goal-bar').style.width = percentage + "%";
+            document.getElementById('goal-text').innerText = percentage.toFixed(1) + "% of Goal Reached";
+            
+            // Turn bar green if complete
+            if(percentage === 100) {
+                document.getElementById('goal-bar').style.backgroundColor = "var(--accent-color)";
+            } else {
+                document.getElementById('goal-bar').style.backgroundColor = "var(--secondary)";
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('totalEarnings', totalEarnings);
+            localStorage.setItem('sessionHistory', JSON.stringify(sessionHistory));
+            updateDashboard();
+        }
+
+        // --- Timer Functions ---
         function startClass() {
             hourlyRate = parseFloat(document.getElementById('rate').value) || 0;
-
-            if (hourlyRate <= 0) {
-                alert("Please enter a valid hourly rate.");
-                return;
-            }
+            currentSessionName = document.getElementById('session-name').value || "Unnamed Session";
+            
+            if (hourlyRate <= 0) return alert("Please enter a valid hourly rate.");
 
             document.getElementById('setup-area').style.display = 'none';
             document.getElementById('display-area').style.display = 'block';
-            document.getElementById('main-card').classList.add('is-running');
-
-            totalSeconds = 0;
+            document.getElementById('current-session-label').innerText = "Teaching: " + currentSessionName;
+            
+            startTime = Date.now();
+            accumulatedTime = 0;
             isPaused = false;
-            updateDisplay();
-
-            interval = setInterval(() => {
-                if (!isPaused) {
-                    totalSeconds++;
-                    updateDisplay();
-                }
-            }, 1000);
+            
+            updateTimerUI();
+            interval = setInterval(() => { if (!isPaused) updateTimerUI(); }, 200);
         }
 
         function togglePause() {
             isPaused = !isPaused;
             const pauseBtn = document.getElementById('pause-btn');
-            const card = document.getElementById('main-card');
-
             if (isPaused) {
+                accumulatedTime += Date.now() - startTime;
                 pauseBtn.innerText = "Resume";
-                pauseBtn.style.backgroundColor = "var(--accent-color)";
-                card.classList.remove('is-running');
             } else {
+                startTime = Date.now();
                 pauseBtn.innerText = "Pause";
-                pauseBtn.style.backgroundColor = "var(--warning)";
-                card.classList.add('is-running');
             }
         }
 
-        function stopClass() {
-            clearInterval(interval);
-            document.getElementById('setup-area').style.display = 'block';
-            document.getElementById('display-area').style.display = 'none';
-            document.getElementById('main-card').classList.remove('is-running');
-
-            // Reset pause button state for next time
-            const pauseBtn = document.getElementById('pause-btn');
-            pauseBtn.innerText = "Pause";
-            pauseBtn.style.backgroundColor = "var(--warning)";
-        }
-
-        function updateDisplay() {
+        function updateTimerUI() {
+            let totalElapsedMs = accumulatedTime;
+            if (!isPaused) totalElapsedMs += Date.now() - startTime;
+            
+            const totalSeconds = Math.floor(totalElapsedMs / 1000);
             const h = Math.floor(totalSeconds / 3600);
             const m = Math.floor((totalSeconds % 3600) / 60);
             const s = totalSeconds % 60;
-
-            document.getElementById('time-display').innerText =
-                String(h).padStart(2, '0') + ":" +
-                String(m).padStart(2, '0') + ":" +
-                String(s).padStart(2, '0');
-
-            // Calculate earnings: (Rate / 3600 seconds) * total seconds elapsed
-            const earned = (hourlyRate / 3600) * totalSeconds;
-
             
-            // Using 2 decimal places for standard currency display
+            document.getElementById('time-display').innerText = 
+                String(h).padStart(2, '0') + ":" + String(m).padStart(2, '0') + ":" + String(s).padStart(2, '0');
+            
+            const earned = (hourlyRate / 3600) * totalSeconds;
             document.getElementById('money-display').innerText = "LKR " + earned.toFixed(2);
+        }
+
+        function stopAndSaveClass() {
+            clearInterval(interval);
+            
+            // Calculate final amounts
+            let totalElapsedMs = accumulatedTime;
+            if (!isPaused) totalElapsedMs += Date.now() - startTime;
+            const finalSeconds = Math.floor(totalElapsedMs / 1000);
+            const finalEarned = (hourlyRate / 3600) * finalSeconds;
+
+            // Format duration string
+            const h = Math.floor(finalSeconds / 3600);
+            const m = Math.floor((finalSeconds % 3600) / 60);
+            const durationStr = `${h}h ${m}m`;
+
+            // Save to state if longer than 10 seconds
+            if (finalSeconds > 10) {
+                totalEarnings += finalEarned;
+                sessionHistory.push({
+                    name: currentSessionName,
+                    amount: finalEarned,
+                    duration: durationStr,
+                    date: new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                });
+                saveData();
+            }
+
+            // Reset UI
+            document.getElementById('setup-area').style.display = 'block';
+            document.getElementById('display-area').style.display = 'none';
+            document.getElementById('pause-btn').innerText = "Pause";
+            document.getElementById('session-name').value = ""; // Clear name input
+        }
+
+        // --- Manual Entry Functions ---
+        function addManualEntry() {
+            const amount = parseFloat(document.getElementById('manual-amount').value);
+            const desc = document.getElementById('manual-desc').value || "Manual Entry";
+            
+            if (!amount || amount <= 0) return alert("Please enter a valid amount.");
+
+            totalEarnings += amount;
+            sessionHistory.push({
+                name: desc,
+                amount: amount,
+                duration: "N/A",
+                date: new Date().toLocaleDateString()
+            });
+            
+            saveData();
+            
+            // Clear inputs
+            document.getElementById('manual-amount').value = "";
+            document.getElementById('manual-desc').value = "";
+        }
+
+        function clearHistory() {
+            if(confirm("Are you sure you want to clear all history and reset total earnings to zero? This cannot be undone.")) {
+                totalEarnings = 0;
+                sessionHistory = [];
+                saveData();
+            }
         }
     </script>
 </body>
-
 </html>
