@@ -121,40 +121,20 @@
     <div class="cloud-status" id="cloud-status">Connecting to Firebase Database...</div>
 
     <script type="module">
+        // 1. Correct URL-based imports for native browser modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    // Import the functions you need from the SDKs you need
-    import { initializeApp } from "firebase/app";
-    import { getAnalytics } from "firebase/analytics";
-    // TODO: Add SDKs for Firebase products that you want to use
-    // https://firebase.google.com/docs/web/setup#available-libraries
-
-    // Your web app's Firebase configuration
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-    const firebaseConfig = {
-        apiKey: "AIzaSyD_g4WJdG_7BlTSJNlbvOgqD_q14zYMs7g",
-        authDomain: "tuition-earning-dashboard.firebaseapp.com",
-        projectId: "tuition-earning-dashboard",
-        storageBucket: "tuition-earning-dashboard.firebasestorage.app",
-        messagingSenderId: "670340026664",
-        appId: "1:670340026664:web:bc10b9b2f372267c71401d",
-        measurementId: "G-6P4C1LELKD"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-        
+        // 2. Your specific Firebase configuration
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyD_g4WJdG_7BlTSJNlbvOgqD_q14zYMs7g",
+            authDomain: "tuition-earning-dashboard.firebaseapp.com",
+            projectId: "tuition-earning-dashboard",
+            storageBucket: "tuition-earning-dashboard.firebasestorage.app",
+            messagingSenderId: "670340026664",
+            appId: "1:670340026664:web:bc10b9b2f372267c71401d",
+            measurementId: "G-6P4C1LELKD"
         };
-        // ==========================================
 
         let app, db, userDocRef;
         let isFirebaseActive = false;
@@ -163,7 +143,7 @@
         try {
             app = initializeApp(firebaseConfig);
             db = getFirestore(app);
-            userDocRef = doc(db, "tuitionData", "manith_earnings"); // This creates a document just for you
+            userDocRef = doc(db, "tuitionData", "manith_earnings"); 
             isFirebaseActive = true;
             document.getElementById('cloud-status').innerText = "✅ Connected to Cloud Database";
             document.getElementById('sync-indicator').innerText = "☁️ Synced";
@@ -187,7 +167,6 @@
 
         // --- Database Listener (Real-time Sync) ---
         if (isFirebaseActive) {
-            // This listens to the cloud. If you update from your phone, your laptop updates instantly.
             onSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
@@ -198,12 +177,10 @@
                     document.getElementById('target-goal').value = targetGoal;
                     updateDashboardUI();
                 } else {
-                    // First time running, push initial zero state to DB
                     saveDataToCloud();
                 }
             });
         } else {
-            // Fallback to local storage if Firebase isn't set up yet
             if(localStorage.getItem('totalEarnings')) totalEarnings = parseFloat(localStorage.getItem('totalEarnings'));
             if(localStorage.getItem('sessionHistory')) sessionHistory = JSON.parse(localStorage.getItem('sessionHistory'));
             if(localStorage.getItem('targetGoal')) document.getElementById('target-goal').value = localStorage.getItem('targetGoal');
@@ -222,7 +199,6 @@
             }
         }
 
-        // Load initial theme
         if(localStorage.getItem('theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
 
         function updateDashboardUI() {
@@ -270,7 +246,6 @@
                     document.getElementById('sync-indicator').innerText = "☁️ Synced";
                 }).catch(err => alert("Error saving to cloud: " + err));
             } else {
-                // Fallback
                 localStorage.setItem('totalEarnings', totalEarnings);
                 localStorage.setItem('sessionHistory', JSON.stringify(sessionHistory));
                 localStorage.setItem('targetGoal', targetGoal);
