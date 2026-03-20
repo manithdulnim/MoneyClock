@@ -5,31 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tuition Earnings Dashboard Pro</title>
     <style>
-        /* All your previous CSS styles remain exactly the same */
         :root {
             --bg-color: #f0f2f5; --text-color: #2c3e50; --card-bg: #ffffff;
             --input-border: #dcdde1; --accent-color: #27ae60; --accent-hover: #2ecc71;
             --danger: #e74c3c; --danger-hover: #c0392b; --warning: #f39c12;
-            --warning-hover: #d68910; --secondary: #3498db;
+            --secondary: #3498db;
         }
         [data-theme="dark"] {
             --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e;
             --input-border: #333; --accent-color: #4cd137; --accent-hover: #44bd32;
         }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; transition: all 0.3s; display: flex; flex-direction: column; align-items: center; }
-        .header { width: 100%; max-width: 900px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .theme-toggle { background: none; border: 2px solid var(--text-color); color: var(--text-color); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: bold; }
-        .theme-toggle:hover { background-color: var(--text-color); color: var(--bg-color); }
-        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; max-width: 900px; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; transition: all 0.3s; display: flex; flex-direction: column; align-items: center; min-height: 100vh;}
+        
+        /* Login Overlay Styles */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-color);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 1000; transition: opacity 0.5s;
+        }
+        .login-card {
+            background-color: var(--card-bg); padding: 40px; border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 90%;
+        }
+        .btn-google {
+            background-color: #4285F4; color: white; border: none; padding: 12px 20px;
+            font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%;
+            display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .btn-google:hover { background-color: #357abd; }
+
+        /* Dashboard Styles */
+        #main-dashboard { display: none; width: 100%; max-width: 900px; flex-direction: column; align-items: center; }
+        .header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header-controls { display: flex; gap: 10px; align-items: center; }
+        .theme-toggle, .logout-btn { background: none; border: 2px solid var(--text-color); color: var(--text-color); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: all 0.3s;}
+        .theme-toggle:hover, .logout-btn:hover { background-color: var(--text-color); color: var(--bg-color); }
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; }
         @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } }
         .card { background-color: var(--card-bg); padding: 25px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 2px solid var(--input-border); padding-bottom: 10px; }
-        .input-group { margin-bottom: 15px; }
+        .input-group { margin-bottom: 15px; width: 100%;}
         label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; opacity: 0.8; }
-        input { width: 100%; padding: 10px; border: 2px solid var(--input-border); border-radius: 8px; background-color: var(--card-bg); color: var(--text-color); box-sizing: border-box; font-size: 16px; }
+        input { width: 100%; padding: 10px; border: 2px solid var(--input-border); border-radius: 8px; background-color: var(--card-bg); color: var(--text-color); box-sizing: border-box; font-size: 16px; transition: border-color 0.3s; }
         input:focus { border-color: var(--accent-color); outline: none; }
-        button { background-color: var(--accent-color); color: #fff; border: none; padding: 12px 15px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; }
+        button { background-color: var(--accent-color); color: #fff; border: none; padding: 12px 15px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; transition: background-color 0.2s, transform 0.1s;}
         button:hover { background-color: var(--accent-hover); }
+        button:active { transform: scale(0.98); }
         .btn-pause { background-color: var(--warning); }
         .btn-stop { background-color: var(--danger); }
         .btn-secondary { background-color: var(--secondary); margin-top: 10px;}
@@ -46,145 +69,182 @@
         .history-item:last-child { border-bottom: none; }
         .history-date { opacity: 0.6; font-size: 0.8rem; }
         .history-amount { font-weight: bold; color: var(--accent-color); }
-        .cloud-status { text-align: center; font-size: 0.8rem; opacity: 0.6; margin-top: 10px; }
+        .cloud-status { text-align: center; font-size: 0.8rem; opacity: 0.6; margin-top: 10px; width: 100%;}
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>Tuition Tracker Pro (Cloud Sync)</h1>
-        <button class="theme-toggle" onclick="toggleTheme()">Toggle Dark Mode</button>
-    </div>
-
-    <div class="dashboard-grid">
-        <div class="card" id="session-card">
-            <h2>Active Class</h2>
-            <div id="setup-area">
-                <div class="input-group">
-                    <label>Session Name (Student/Subject):</label>
-                    <input type="text" id="session-name" placeholder="e.g. O/L Math - John">
-                </div>
-                <div class="input-group">
-                    <label>Hourly Rate (LKR):</label>
-                    <input type="number" id="rate" min="0" step="50" value="1500">
-                </div>
-                <button onclick="startClass()">Start Class</button>
-            </div>
-
-            <div id="display-area" class="timer-display">
-                <div id="current-session-label" style="font-weight:bold; margin-bottom:10px;"></div>
-                <div class="timer" id="time-display">00:00:00</div>
-                <div class="money" id="money-display">LKR 0.00</div>
-                <div class="controls">
-                    <button id="pause-btn" class="btn-pause" onclick="togglePause()">Pause</button>
-                    <button class="btn-stop" onclick="stopAndSaveClass()">End & Save</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <h2>Total Earnings <span style="font-size: 0.8rem; float: right; color: var(--secondary);" id="sync-indicator">☁️ Syncing...</span></h2>
-            <div class="total-money" id="total-display">LKR 0.00</div>
-            
-            <div class="input-group" style="margin-top: 20px;">
-                <label>Set Target Goal (LKR):</label>
-                <input type="number" id="target-goal" value="50000" onchange="updateGoal()">
-            </div>
-            
-            <div class="progress-container">
-                <div class="progress-bar" id="goal-bar"></div>
-            </div>
-            <div class="goal-text" id="goal-text">0% of Goal</div>
-
-            <hr style="border: 1px solid var(--input-border); margin: 20px 0;">
-
-            <h3>Add Missed Earnings</h3>
-            <div class="input-group">
-                <input type="number" id="manual-amount" placeholder="Amount (LKR)">
-            </div>
-            <div class="input-group">
-                <input type="text" id="manual-desc" placeholder="Description (e.g. Offline Marking)">
-            </div>
-            <button class="btn-secondary" onclick="addManualEntry()">Add to Total</button>
-        </div>
-
-        <div class="card" style="grid-column: 1 / -1;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2>Session History</h2>
-                <button class="btn-stop" style="width: auto; padding: 5px 10px; font-size: 0.8rem;" onclick="clearHistory()">Clear Data</button>
-            </div>
-            <ul class="history-list" id="history-list">
-                </ul>
+    <div id="login-screen">
+        <div class="login-card">
+            <h1 style="margin-top:0;">Tuition Tracker</h1>
+            <p>Please sign in to access your secure dashboard.</p>
+            <button class="btn-google" onclick="signInWithGoogle()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/><path d="M1 1h22v22H1z" fill="none"/></svg>
+                Sign in with Google
+            </button>
         </div>
     </div>
-    
-    <div class="cloud-status" id="cloud-status">Connecting to Firebase Database...</div>
+
+    <div id="main-dashboard">
+        <div class="header">
+            <div>
+                <h1 style="margin: 0;">Tuition Tracker Pro</h1>
+                <div id="user-greeting" style="font-size: 0.9rem; opacity: 0.8;"></div>
+            </div>
+            <div class="header-controls">
+                <button class="theme-toggle" onclick="toggleTheme()">Dark Mode</button>
+                <button class="logout-btn" onclick="signOutUser()">Sign Out</button>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card" id="session-card">
+                <h2>Active Class</h2>
+                <div id="setup-area">
+                    <div class="input-group">
+                        <label>Session Name (Student/Subject):</label>
+                        <input type="text" id="session-name" placeholder="e.g. O/L Math - John">
+                    </div>
+                    <div class="input-group">
+                        <label>Hourly Rate (LKR):</label>
+                        <input type="number" id="rate" min="0" step="50" value="1500">
+                    </div>
+                    <button onclick="startClass()">Start Class</button>
+                </div>
+
+                <div id="display-area" class="timer-display">
+                    <div id="current-session-label" style="font-weight:bold; margin-bottom:10px;"></div>
+                    <div class="timer" id="time-display">00:00:00</div>
+                    <div class="money" id="money-display">LKR 0.00</div>
+                    <div class="controls">
+                        <button id="pause-btn" class="btn-pause" onclick="togglePause()">Pause</button>
+                        <button class="btn-stop" onclick="stopAndSaveClass()">End & Save</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Total Earnings <span style="font-size: 0.8rem; float: right; color: var(--secondary);" id="sync-indicator">☁️ Syncing...</span></h2>
+                <div class="total-money" id="total-display">LKR 0.00</div>
+                
+                <div class="input-group" style="margin-top: 20px;">
+                    <label>Set Target Goal (LKR):</label>
+                    <input type="number" id="target-goal" value="50000" onchange="updateGoal()">
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-bar" id="goal-bar"></div>
+                </div>
+                <div class="goal-text" id="goal-text">0% of Goal</div>
+
+                <hr style="border: 1px solid var(--input-border); margin: 20px 0;">
+
+                <h3>Add Missed Earnings</h3>
+                <div class="input-group">
+                    <input type="number" id="manual-amount" placeholder="Amount (LKR)">
+                </div>
+                <div class="input-group">
+                    <input type="text" id="manual-desc" placeholder="Description (e.g. Offline Marking)">
+                </div>
+                <button class="btn-secondary" onclick="addManualEntry()">Add to Total</button>
+            </div>
+
+            <div class="card" style="grid-column: 1 / -1;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2>Session History</h2>
+                    <button class="btn-stop" style="width: auto; padding: 5px 10px; font-size: 0.8rem;" onclick="clearHistory()">Clear Data</button>
+                </div>
+                <ul class="history-list" id="history-list"></ul>
+            </div>
+        </div>
+        <div class="cloud-status" id="cloud-status">Connecting to Secure Firebase...</div>
+    </div>
 
     <script type="module">
-        // 1. Correct URL-based imports for native browser modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        // 2. Your specific Firebase configuration
+        // Your exact Firebase keys, formatted correctly for the module imports
         const firebaseConfig = {
             apiKey: "AIzaSyD_g4WJdG_7BlTSJNlbvOgqD_q14zYMs7g",
             authDomain: "tuition-earning-dashboard.firebaseapp.com",
+            databaseURL: "https://tuition-earning-dashboard-default-rtdb.asia-southeast1.firebasedatabase.app",
             projectId: "tuition-earning-dashboard",
             storageBucket: "tuition-earning-dashboard.firebasestorage.app",
             messagingSenderId: "670340026664",
-            appId: "1:670340026664:web:bc10b9b2f372267c71401d",
-            measurementId: "G-6P4C1LELKD"
+            appId: "1:670340026664:web:369fc158c065385671401d",
+            measurementId: "G-V89TXKEL2M"
         };
 
-        let app, db, userDocRef;
-        let isFirebaseActive = false;
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+        
+        let userDocRef;
+        let unsubscribeSnapshot = null;
 
-        // Initialize Firebase safely
-        try {
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            userDocRef = doc(db, "tuitionData", "manith_earnings"); 
-            isFirebaseActive = true;
-            document.getElementById('cloud-status').innerText = "✅ Connected to Cloud Database";
-            document.getElementById('sync-indicator').innerText = "☁️ Synced";
-        } catch (error) {
-            console.error("Firebase Initialization Error:", error);
-            document.getElementById('cloud-status').innerText = "⚠️ Running Locally (Firebase not configured yet)";
-            document.getElementById('sync-indicator').style.display = 'none';
-        }
-
-        // --- State Variables ---
+        // State Variables
         let totalEarnings = 0;
         let sessionHistory = [];
         let targetGoal = 50000;
         
-        let interval;
-        let isPaused = false;
-        let hourlyRate = 0;
-        let startTime = 0;
-        let accumulatedTime = 0;
-        let currentSessionName = "";
+        let interval; let isPaused = false; let hourlyRate = 0; let startTime = 0; let accumulatedTime = 0; let currentSessionName = "";
 
-        // --- Database Listener (Real-time Sync) ---
-        if (isFirebaseActive) {
-            onSnapshot(userDocRef, (docSnap) => {
+        // Authentication Observer
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in
+                document.getElementById('login-screen').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('main-dashboard').style.display = 'flex';
+                }, 500);
+
+                document.getElementById('user-greeting').innerText = `Logged in as: ${user.email}`;
+                document.getElementById('cloud-status').innerText = "✅ Securely Connected";
+                
+                // Set the document reference specifically to their unique User ID
+                userDocRef = doc(db, "tuitionData", user.uid);
+                
+                startDatabaseListener();
+            } else {
+                // User is signed out
+                document.getElementById('login-screen').style.display = 'flex';
+                setTimeout(() => { document.getElementById('login-screen').style.opacity = '1'; }, 10);
+                document.getElementById('main-dashboard').style.display = 'none';
+                if(unsubscribeSnapshot) unsubscribeSnapshot(); 
+            }
+        });
+
+        window.signInWithGoogle = function() {
+            signInWithPopup(auth, provider).catch((error) => {
+                console.error("Error signing in: ", error);
+                alert("Failed to sign in. Please check your console for errors.");
+            });
+        };
+
+        window.signOutUser = function() {
+            signOut(auth).catch((error) => { console.error("Error signing out: ", error); });
+        };
+
+        function startDatabaseListener() {
+            unsubscribeSnapshot = onSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     totalEarnings = data.totalEarnings || 0;
                     sessionHistory = data.sessionHistory || [];
                     targetGoal = data.targetGoal || 50000;
-                    
                     document.getElementById('target-goal').value = targetGoal;
                     updateDashboardUI();
                 } else {
-                    saveDataToCloud();
+                    saveDataToCloud(); 
                 }
+            }, (error) => {
+                console.error("Permission denied or database error:", error);
+                alert("Database access denied. Check your Firestore security rules.");
             });
-        } else {
-            if(localStorage.getItem('totalEarnings')) totalEarnings = parseFloat(localStorage.getItem('totalEarnings'));
-            if(localStorage.getItem('sessionHistory')) sessionHistory = JSON.parse(localStorage.getItem('sessionHistory'));
-            if(localStorage.getItem('targetGoal')) document.getElementById('target-goal').value = localStorage.getItem('targetGoal');
-            updateDashboardUI();
         }
 
         // --- Core Functions ---
@@ -198,7 +258,6 @@
                 localStorage.setItem('theme', 'dark');
             }
         }
-
         if(localStorage.getItem('theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
 
         function updateDashboardUI() {
@@ -228,29 +287,24 @@
         function updateGoalProgressVisuals() {
             let percentage = (totalEarnings / targetGoal) * 100;
             if (percentage > 100) percentage = 100;
-            
             document.getElementById('goal-bar').style.width = percentage + "%";
             document.getElementById('goal-text').innerText = percentage.toFixed(1) + "% of Goal Reached";
             document.getElementById('goal-bar').style.backgroundColor = (percentage === 100) ? "var(--accent-color)" : "var(--secondary)";
         }
 
         function saveDataToCloud() {
-            if (isFirebaseActive) {
-                document.getElementById('sync-indicator').innerText = "☁️ Saving...";
-                setDoc(userDocRef, {
-                    totalEarnings: totalEarnings,
-                    sessionHistory: sessionHistory,
-                    targetGoal: targetGoal,
-                    lastUpdated: new Date().toISOString()
-                }).then(() => {
-                    document.getElementById('sync-indicator').innerText = "☁️ Synced";
-                }).catch(err => alert("Error saving to cloud: " + err));
-            } else {
-                localStorage.setItem('totalEarnings', totalEarnings);
-                localStorage.setItem('sessionHistory', JSON.stringify(sessionHistory));
-                localStorage.setItem('targetGoal', targetGoal);
-                updateDashboardUI();
-            }
+            document.getElementById('sync-indicator').innerText = "☁️ Saving...";
+            setDoc(userDocRef, {
+                totalEarnings: totalEarnings,
+                sessionHistory: sessionHistory,
+                targetGoal: targetGoal,
+                lastUpdated: new Date().toISOString()
+            }).then(() => {
+                document.getElementById('sync-indicator').innerText = "☁️ Synced";
+            }).catch(err => {
+                console.error(err);
+                alert("Error saving to cloud. You might be signed out.");
+            });
         }
 
         // --- Timer Functions ---
@@ -263,12 +317,8 @@
             document.getElementById('display-area').style.display = 'block';
             document.getElementById('current-session-label').innerText = "Teaching: " + currentSessionName;
             
-            startTime = Date.now();
-            accumulatedTime = 0;
-            isPaused = false;
-            
-            updateTimerUI();
-            interval = setInterval(() => { if (!isPaused) updateTimerUI(); }, 200);
+            startTime = Date.now(); accumulatedTime = 0; isPaused = false;
+            updateTimerUI(); interval = setInterval(() => { if (!isPaused) updateTimerUI(); }, 200);
         }
 
         window.togglePause = function() {
@@ -286,7 +336,6 @@
         function updateTimerUI() {
             let totalElapsedMs = accumulatedTime;
             if (!isPaused) totalElapsedMs += Date.now() - startTime;
-            
             const totalSeconds = Math.floor(totalElapsedMs / 1000);
             const h = Math.floor(totalSeconds / 3600);
             const m = Math.floor((totalSeconds % 3600) / 60);
@@ -304,16 +353,13 @@
             const finalSeconds = Math.floor(totalElapsedMs / 1000);
             const finalEarned = (hourlyRate / 3600) * finalSeconds;
 
-            const h = Math.floor(finalSeconds / 3600);
-            const m = Math.floor((finalSeconds % 3600) / 60);
+            const h = Math.floor(finalSeconds / 3600); const m = Math.floor((finalSeconds % 3600) / 60);
             const durationStr = `${h}h ${m}m`;
 
             if (finalSeconds > 10) {
                 totalEarnings += finalEarned;
                 sessionHistory.push({
-                    name: currentSessionName,
-                    amount: finalEarned,
-                    duration: durationStr,
+                    name: currentSessionName, amount: finalEarned, duration: durationStr,
                     date: new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
                 });
                 saveDataToCloud();
@@ -332,23 +378,14 @@
             if (!amount || amount <= 0) return alert("Please enter a valid amount.");
 
             totalEarnings += amount;
-            sessionHistory.push({
-                name: desc,
-                amount: amount,
-                duration: "N/A",
-                date: new Date().toLocaleDateString()
-            });
-            
+            sessionHistory.push({ name: desc, amount: amount, duration: "N/A", date: new Date().toLocaleDateString() });
             saveDataToCloud();
-            document.getElementById('manual-amount').value = "";
-            document.getElementById('manual-desc').value = "";
+            document.getElementById('manual-amount').value = ""; document.getElementById('manual-desc').value = "";
         }
 
         window.clearHistory = function() {
-            if(confirm("Are you sure you want to clear all history and reset total earnings to zero?")) {
-                totalEarnings = 0;
-                sessionHistory = [];
-                saveDataToCloud();
+            if(confirm("Are you sure you want to clear all history?")) {
+                totalEarnings = 0; sessionHistory = []; saveDataToCloud();
             }
         }
     </script>
